@@ -4,7 +4,7 @@ import { connect} from 'react-redux';
 
 import { 
     addCustSale, editCustSale, deleteCustSale, getCustSaleList, getCustCustomerList, getCustProductList,getCustBusinessList,
-    editCart
+    editCart, getCustCurrencyItemList
  } from '../../../actions';
 import PrintBill from './PrintBill';
 import ProductGrids from '../../../component/products/ProductGrids';
@@ -247,12 +247,10 @@ class CustOrderPage extends Component {
     }
 
    async componentDidMount() {
-      
-       
         this.props.getCustBusinessList();
         this.props.getCustCustomerList();
-
         await this.props.getCustProductList();
+        await this.props.getCustCurrencyItemList();
         this.clearAndRefresh();
     }
     
@@ -286,6 +284,7 @@ class CustOrderPage extends Component {
                                         <ProductGrids 
                                         items={this.props.custProductList}
                                         addToCart={this.addToCart}
+                                        {...this.props}
                                         ></ProductGrids>
                                     </Grid>
                                 </Grid>
@@ -320,7 +319,9 @@ const mapStateToProps = state => {
     const { custCustomerList} = state.custCustomerReducer;
     const { custProductList} = state.custProductReducer;
     const { custBusinessList} = state.custBusinessReducer;
-    return { user, custSaleList, custCustomerList, custProductList, custBusinessList, custCart};
+    const { custCurrencyItemList} = state.custCurrencyItemReducer;
+
+    return { user, custSaleList, custCustomerList, custProductList, custBusinessList, custCart, custCurrencyItemList};
 };
 
-export default connect(mapStateToProps, { addCustSale, editCustSale,deleteCustSale, getCustSaleList, getCustCustomerList, getCustProductList, getCustBusinessList, editCart})(CustOrderPage);
+export default connect(mapStateToProps, { addCustSale, editCustSale,deleteCustSale, getCustSaleList, getCustCustomerList, getCustProductList, getCustBusinessList, editCart, getCustCurrencyItemList})(CustOrderPage);

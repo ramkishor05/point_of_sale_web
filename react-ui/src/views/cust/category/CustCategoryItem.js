@@ -135,6 +135,8 @@ class CustCategoryItem extends Component {
             <>
                 
                 <MainCard title="Category List" 
+                  border = {false}
+                 content = {false}
                         button ={
                             
                             <Fab size="medium" color="primary" aria-label="Add" className={styles.button}

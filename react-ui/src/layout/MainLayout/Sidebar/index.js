@@ -15,6 +15,7 @@ import LogoSection from '../LogoSection';
 import MenuCard from './MenuCard';
 import { drawerWidth } from './../../../store/constant';
 import { useSelector } from 'react-redux';
+import useWindowDimensions from '../../../hooks/useWindowDimensions';
 
 // style constant
 const useStyles = makeStyles((theme) => ({
@@ -53,7 +54,7 @@ const useStyles = makeStyles((theme) => ({
 
 const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
     const userMenuGroupReducer = useSelector((state) => state.userMenuGroupReducer);
-
+    const { height, width } = useWindowDimensions();
     const classes = useStyles();
     const theme = useTheme();
     const matchUpMd = useMediaQuery(theme.breakpoints.up('md'));
@@ -66,7 +67,7 @@ const Sidebar = ({ drawerOpen, drawerToggle, window }) => {
                 </div>
             </Box>
             <BrowserView>
-                <PerfectScrollbar component="div" className={classes.ScrollHeight}>
+                <PerfectScrollbar component="div" className={classes.ScrollHeight} style={{height : height-108}}>
                     {
                        userMenuGroupReducer.userMenuGroups.length > 0 && <MenuList />
                     }

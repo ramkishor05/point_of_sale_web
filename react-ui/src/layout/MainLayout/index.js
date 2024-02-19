@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import PerfectScrollbar from 'react-perfect-scrollbar';
 
 // material-ui
 import { makeStyles, useTheme } from '@material-ui/styles';
@@ -42,18 +43,18 @@ const useStyles = makeStyles((theme) => ({
             duration: theme.transitions.duration.leavingScreen
         }),
         [theme.breakpoints.up('md')]: {
-            marginLeft: -(drawerWidth - 20),
+            marginLeft: -(drawerWidth - 10),
             width: `calc(100% - ${drawerWidth}px)`
         },
         [theme.breakpoints.down('md')]: {
-            marginLeft: '20px',
+            marginLeft: '10px',
             width: `calc(100% - ${drawerWidth}px)`,
-            padding: '16px'
+            padding: '5px'
         },
         [theme.breakpoints.down('sm')]: {
             marginLeft: '10px',
             width: `calc(100% - ${drawerWidth}px)`,
-            padding: '16px',
+            padding: '5px',
             marginRight: '10px'
         }
     },
@@ -66,7 +67,7 @@ const useStyles = makeStyles((theme) => ({
         borderBottomLeftRadius: 0,
         borderBottomRightRadius: 0,
         [theme.breakpoints.down('md')]: {
-            marginLeft: '20px'
+            marginLeft: '10px'
         },
         [theme.breakpoints.down('sm')]: {
             marginLeft: '10px'
@@ -131,7 +132,9 @@ const MainLayout = ({ children }) => {
                 {/* <Main open={leftDrawerOpened}> */}
                 {/* breadcrumb */}
                 <Breadcrumbs separator={IconChevronRight} navigation={navigation} icon title rightAlign />
-                <div style={{overflowY: 'scroll', overflowX: 'hidden', height : height-120}}>{children}</div>
+                <PerfectScrollbar component="div" className={classes.ScrollHeight} style={{height : height-108, paddingRight:10}}>
+                {children}
+                </PerfectScrollbar>
                 {/* </Main> */}
             </main>
             <Customization />

@@ -101,6 +101,7 @@ class CustCategoryGroup extends Component {
                 <>
                 
                     <MainCard title="Category Group" 
+                        content = {false}
                         button ={
                             <Button variant="outlined" 
                             color="primary" 

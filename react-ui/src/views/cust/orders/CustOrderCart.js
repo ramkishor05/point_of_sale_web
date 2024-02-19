@@ -75,7 +75,7 @@ const CustOrderCart = (props) => {
 
     const itemQnt=(cartItem, saleQnt)=>{
         cartItem['saleQnt']=saleQnt;
-        addItemToCart(cartItem);
+        editCart(custCart);
     }
 
     const addCartAdditionalList= (formValues)=>{
