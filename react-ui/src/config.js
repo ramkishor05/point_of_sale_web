@@ -2,7 +2,7 @@ let APP_HOST_SERVER = null;
 if (process.env.APP_HOST_SERVER) {
   APP_HOST_SERVER = process.env.APP_HOST_SERVER;
 } else {
-  APP_HOST_SERVER = "https://7529-121-243-75-227.ngrok-free.app";
+  APP_HOST_SERVER = "https://8e10-121-243-75-227.ngrok-free.app";
 }
 
 const config = {
