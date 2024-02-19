@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect } from 'react';
+import React, { useEffect} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 // material-ui
@@ -11,10 +11,13 @@ import {
     Fab,
     Grid,
     IconButton,
+    
     Tooltip,
     Typography
 } from '@material-ui/core';
 
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 // third-party
 import PerfectScrollbar from 'react-perfect-scrollbar';
 
@@ -28,14 +31,15 @@ import DynamicField from '../../../component/fields/DynamicField';
 import PaymentField from '../../../component/fields/PaymentField';
 import moment from 'moment';
 import CustomerDropDwon from '../../../component/dropdwons/CustomerDropDwon';
-import CustTransationService from '../../../services/CustTransationService';
 import { getCustCartByUser } from '../../../actions';
+import CustSaleService from '../../../services/CustSaleService';
+import CustSalePaymentService from '../../../services/CustSalePaymentService';
 
 //-----------------------|| CustOrderCart ||-----------------------//
 
 const CustOrderCart = (props) => {
 
-    const  {editCart, addItemToCart, custProductList}=props;
+    const {editCart, addItemToCart, custProductList}=props;
     const theme = useTheme();
     const dispatch = useDispatch();
    
@@ -51,7 +55,6 @@ const CustOrderCart = (props) => {
     const [step, setStep] = React.useState(1);
 
     const findProduct=(id)=>{
-        console.log("custProductList=", custProductList)
         return custProductList.find(custProduct=>custProduct.id==id)
     }
     
@@ -62,27 +65,9 @@ const CustOrderCart = (props) => {
         4: "Place Order"
     }
 
-    useLayoutEffect(() => {
-
-        custCart['discounts']='';
-        custCart['totalPrice']='';
-        custCart['totalQnt']= '';
-        custCart['customerId']= '';
-        custCart['userId']='';
-        custCart['saleDate']=moment().format('YYYY-MM-DD');
-        custCart['custCartSaleItemList']= [...custCart.custCartSaleItemList];
-        custCart['custCartSaleAdditionalList']= [...custCart.custCartSaleAdditionalList];
-        custCart['payment']=custCart.payment
-        console.log("custCart=",custCart)
-      }, []);
-
-      useEffect(() => {
+    useEffect(() => {
         dispatch(getCustCartByUser(props.userDetail.id));
-        custCart['saleDate']=moment().format('YYYY-MM-DD');
-        custCart['custCartSaleItemList']= [...custCart.custCartSaleItemList];
-        custCart['custCartSaleAdditionalList']= [...custCart.custCartSaleAdditionalList];
-        console.log("custCart=",custCart)
-      }, [getCustCartByUser]);
+    }, [getCustCartByUser]);
 
     const handleToggle = () => {
         setOpen(!open);
@@ -99,7 +84,7 @@ const CustOrderCart = (props) => {
     }
 
     const setPayment=(payment)=>{
-        custCart['custCartSalePaymentList']= [payment];
+        custCart['payment']= payment;
         editCart(custCart);
     }
 
@@ -160,13 +145,13 @@ const CustOrderCart = (props) => {
                             <img
                                 width={40}
                                 height={40}
-                                src={selectedItem.custProduct.logoUrl}
+                                src={selectedItem?.custProduct?.logoUrl}
                             />
                             
                         </Grid>
                         <Grid item xs={12} lg={5} md={5}>
-                            <Typography>{selectedItem.custProduct.title}</Typography>
-                            <Typography>{selectedItem.salePrice.price}</Typography>
+                            <Typography>{selectedItem?.custProduct?.title}</Typography>
+                            <Typography>{selectedItem?.salePrice?.price}</Typography>
                         </Grid>
                         <Grid item xs={12} lg={5} md={5} sx={{padding:2}}>
                         <ShoppingCartButton  
@@ -224,22 +209,65 @@ const CustOrderCart = (props) => {
 
     const processOrder= ()=>{
         
-        if(step<4){
+        if(step<=4){
             switch(step){
-                case 3:
-                    const transaction={};
-                    transaction['transactionAmount']=custCart.payment.amount;
-                    transaction['transactionType']='Credit';
-                    transaction['transactionMode']=custCart.payment.mode;
-                    transaction['transactionDate']=moment().format('YYYY-MM-DD');
-                    transaction['transactionStatus']=custCart.payment.mode=='Unpaid' ? 'Unpaid': 'Paid';
-                    transaction['transactionReciverId']=props.userDetail.id;
-                    transaction['transactionSenderId']=custCart.customerId;
-                    transaction['transactionMakerId']=props.userDetail.id;
-                    transaction['transactionService']='SALE';
-                    console.log("transaction=",transaction)
-                    CustTransationService.add(transaction);
+                case 4:
+                let custProductSale = {
+                    id:custCart.id,
+                    idenNo:custCart.idenNo,
+                    saleDate: moment().format('YYYY-MM-DD'),
+                    customerId: custCart.customerId,
+                    discounts: custCart.discounts,
+                    totalPrice: 0,
+                    totalQnt: 0,
+                    custProductSaleItemList: [],
+                    custProductSaleAdditionalList:custCart.custProductSaleAdditionalList
+                }
+                custCart.custCartSaleItemList.forEach((item)=>{
+                    custProductSale.totalQnt+=item.saleQnt;
+                    custProductSale.totalPrice+=(item.saleQnt*item.salePrice.price);
+                    let custProductSaleItem={
+                        id:item.id,
+                        name: item.name,
+                        desc: item.desc,
+                        discount: item.discount,
+                        purchasePrice: item.purchasePrice,
+                        saleQnt: item.saleQnt,
+                        saleType: item.isWholeSale? "Whole Sale": "Retail Sale",
+                        salePrice: item.salePrice,
+                        custProductId: item.custProductId
+                    }
+                    custProductSale.custProductSaleItemList.push(custProductSaleItem);
+                })
+
+                CustSaleService.add(custProductSale).then(custProductSaleReturn=>{
+                    const custTransaction={};
+                    custTransaction['transactionAmount']=custCart.payment.amount;
+                    custTransaction['transactionType']='Credit';
+                    custTransaction['transactionMode']=custCart.payment.mode;
+                    custTransaction['transactionDate']=moment().format('YYYY-MM-DD');
+                    custTransaction['transactionStatus']=custCart.payment.mode=='Unpaid' ? 'Unpaid': 'Paid';
+                    custTransaction['transactionReciverId']=props.userDetail.id;
+                    custTransaction['transactionSenderId']=custCart.customerId;
+                    custTransaction['transactionMakerId']=props.userDetail.id;
+                    custTransaction['transactionService']='SALE';
+                    console.log("transaction=",custTransaction)
+
+                    const custProductSalePayment={
+                        customerId: custCart.customerId,
+                        custTransaction: custTransaction,
+                        primaryPayment: true,
+                        paymentState: "INITIAL",
+                        custProductSaleId: custProductSaleReturn.id
+                    };
+
+                    CustSalePaymentService.add(custProductSalePayment).then(custProductSalePaymentReturn=>{
+                        console.log("custProductSalePaymentReturn=", custProductSalePaymentReturn)
+                    });
+                })
+               
             }
+            if(step<4)
             setStep(step+1);
         }
     }
@@ -289,6 +317,26 @@ const CustOrderCart = (props) => {
                     }
                 }}
             >
+
+                <Snackbar
+                anchorOrigin={{ vertical:"top", horizontal: "center"}}
+                open={true}
+                onClose={false}
+                message="I love snacks"
+                key={"orderId"}
+                autoHideDuration={1200}
+                >
+
+                    <Alert
+                        onClose={false}
+                        severity="success"
+                        variant="filled"
+                        sx={{ width: '100%' }}
+                    >
+                        This is a success Alert inside a Snackbar!
+                    </Alert>
+
+                </Snackbar>
                 <PerfectScrollbar component="div">
                     <Grid container spacing={gridSpacing} sx={{ p: 3 }}>
                        
